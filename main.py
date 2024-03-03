@@ -176,19 +176,25 @@ def publish_to_instagram(photo_path, caption):
     cl = Client()
     cl.login(os.getenv('INSTAGRAM_USERNAME'), os.getenv('INSTAGRAM_PASSWORD'))
     cl.photo_upload(photo_path, caption)
+    return True
 
 
-def log_to_db(json_post_text, img_path):
-    values = {"main_title": [json_post_text["main_title"]],
-              "subtitle": [json_post_text["subtitle"]],
-              "post_caption": [json_post_text["post_caption"]],
-              "hashtags": [json_post_text["hashtags"]],
-              "json": [json.dumps(json_post_text)],
-              "date": [current_time],
-              "edited_img_path": [img_path]}
+def log_to_db(json_post_text, img_path, published):
+    # values = {"main_title": [json_post_text["main_title"]],
+    #           "subtitle": [json_post_text["subtitle"]],
+    #           "post_caption": [json_post_text["post_caption"]],
+    #           "hashtags": [json_post_text["hashtags"]],
+    #           "json": [json.dumps(json_post_text)],
+    #           "date": [current_time],
+    #           "edited_img_path": [img_path],
+    #           "published": [published]}
+    # df = pd.DataFrame.from_dict(values).to_csv("logs.csv")
 
-    df = pd.DataFrame.from_dict(values)
-    df.to_csv("logs.csv", mode='a', header=False, index=False)
+    df = pd.read_csv("logs.csv", index_col=0)
+    df.loc[len(df)] = [json_post_text["main_title"], json_post_text["subtitle"], json_post_text["post_caption"],
+                       json_post_text["hashtags"], json.dumps(json_post_text), current_time, img_path, published]
+    df = df.drop_duplicates(subset=["post_caption"])
+    df.to_csv("logs.csv")
 
 
 if __name__ == "__main__":
@@ -200,6 +206,10 @@ if __name__ == "__main__":
     generated_img_path = mock.img_path
     # edited_img_path = edit_image(generated_img_path, json_post_text)
     edited_img_path = mock.edited_img_path
-    publish_to_instagram(edited_img_path, json_post_text["post_caption"] + "\n" + json_post_text["hashtags"])
-    log_to_db(json_post_text, edited_img_path)
+    publish = input("Do you want to publish to Instagram? (y/n): ")
+    published = False
+    if publish == "y":
+        published = publish_to_instagram(edited_img_path,
+                                         json_post_text["post_caption"] + "\n" + json_post_text["hashtags"])
+    log_to_db(json_post_text, edited_img_path, published)
     print("Done!")
