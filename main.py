@@ -1,9 +1,10 @@
 import os
+import re
 import time
-import html2text
 import openai
 import requests
 import json
+from bs4 import BeautifulSoup
 from openai import OpenAI
 from dotenv import load_dotenv
 from string import Template
@@ -99,11 +100,21 @@ Answer with a JSON object with the following structure:
     return json_text
 
 
+def clean_string(html):
+    soup = BeautifulSoup(html, features="lxml")
+    for br in soup.find_all("br"):
+        br.replace_with("\n")
+    text = soup.get_text()
+    text = re.sub(r'(\n+\s+)+', '\n', text)
+    text = re.sub(r'\t+', ' ', text)
+    text = text.replace(u'\xa0', ' ')
+    return text
+
+
 def get_post_text(url):
     session = HTMLSession()
     html = session.get(url)
-    h = html2text.HTML2Text()
-    text = h.handle(html.text)
+    text = clean_string(html.text)
     text = text.strip()
     return text
 
@@ -136,7 +147,7 @@ def edit_image(image_path, json_post_text):
 
     title = json_post_text["main_title"]
     size_b, size = 55, 55
-    font_b = ImageFont.truetype('TTLakesNeueCond-Bold.ttf', size_b)
+    font_b = ImageFont.truetype('fonts/TTLakesNeueCond-Bold.ttf', size_b)
     subtitle = json_post_text["subtitle"]
     font = ImageFont.truetype('fonts/TT Lakes Neue Trial Condensed Regular.ttf', size)
 
@@ -149,7 +160,7 @@ def edit_image(image_path, json_post_text):
     i = 0
     while wt > W - 2 * c:
         i += 1
-        font_b = ImageFont.truetype('TTLakesNeueCond-Bold.ttf', size_b - i)
+        font_b = ImageFont.truetype('fonts/TTLakesNeueCond-Bold.ttf', size_b - i)
         _, _, wt, ht = draw.textbbox((0, 0), title, font=font_b)
 
     if ws > W - 2 * c:
@@ -172,7 +183,9 @@ def edit_image(image_path, json_post_text):
     return final_path
 
 
-def publish_to_instagram(photo_path, caption):
+def publish_to_instagram(photo_path, json_post_text):
+    caption = json_post_text["post_caption"] + "\n" + json_post_text["hashtags"]
+
     cl = Client()
     cl.login(os.getenv('INSTAGRAM_USERNAME'), os.getenv('INSTAGRAM_PASSWORD'))
     cl.photo_upload(photo_path, caption)
@@ -198,18 +211,19 @@ def log_to_db(json_post_text, img_path, published):
 
 
 if __name__ == "__main__":
-    url = "https://www.macrumors.com/2024/02/28/tim-cook-apple-generative-ai-break-new-ground/?utm_source=tldrai"
-    # text = get_post_text(url)
-    # json_post_text = generate_post_text(text)
-    json_post_text = mock.json_post_text
-    # generated_img_path = generate_image(json_post_text)
-    generated_img_path = mock.img_path
-    # edited_img_path = edit_image(generated_img_path, json_post_text)
-    edited_img_path = mock.edited_img_path
+    url = "https://mistral.ai/news/mistral-large/?utm_source=tldrai"
+    text = get_post_text(url)
+    json_post_text = generate_post_text(text)
+    # json_post_text = mock.json_post_text
+    generated_img_path = generate_image(json_post_text)
+    # generated_img_path = mock.img_path
+    edited_img_path = edit_image(generated_img_path, json_post_text)
+    # edited_img_path = mock.edited_img_path
+
     publish = input("Do you want to publish to Instagram? (y/n): ")
     published = False
     if publish == "y":
-        published = publish_to_instagram(edited_img_path,
-                                         json_post_text["post_caption"] + "\n" + json_post_text["hashtags"])
+        published = publish_to_instagram(edited_img_path, json_post_text)
     log_to_db(json_post_text, edited_img_path, published)
+
     print("Done!")
