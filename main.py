@@ -12,6 +12,7 @@ from PIL import Image, ImageFont, ImageDraw
 from copy import deepcopy
 from instagrapi import Client
 import mock
+import pandas as pd
 
 load_dotenv('.env')
 openai.api_key = os.getenv('OPENAI_API_KEY')
@@ -79,7 +80,7 @@ Answer with a JSON object with the following structure:
   "main_title": "A captivating title for the post of a maximum of 35 characters.",
   "subtitle": "A captivating subtitle for the post of a maximum of 80 characters.",
   "post_caption": "Your post caption here.",
-  "hashtags: "Your hashtags here."
+  "hashtags": "Your hashtags here."
 }'''
 
     post_desc_prompt = Template(post_desc_prompt).substitute(page=text)
@@ -106,6 +107,24 @@ def get_post_text(url):
     text = text.strip()
     return text
 
+    # from selenium import webdriver
+    #
+    # # Set up options for the Chrome WebDriver
+    # options = webdriver.ChromeOptions()
+    # options.add_argument('--headless')  # Optional: Run in headless mode without opening a browser window
+    #
+    # # Initialize the WebDriver
+    # driver = webdriver.Chrome(options=options)
+    #
+    # # Load the webpage
+    # driver.get(url)
+    #
+    # # Get the page source after JavaScript execution
+    # html = driver.page_source
+    #
+    # # Close the WebDriver
+    # driver.quit()
+
 
 def edit_image(image_path, json_post_text):
     generated_image = Image.open(image_path)
@@ -119,7 +138,7 @@ def edit_image(image_path, json_post_text):
     size_b, size = 55, 55
     font_b = ImageFont.truetype('TTLakesNeueCond-Bold.ttf', size_b)
     subtitle = json_post_text["subtitle"]
-    font = ImageFont.truetype('TTLakesNeueCond-XLight.ttf', size)
+    font = ImageFont.truetype('fonts/TT Lakes Neue Trial Condensed Regular.ttf', size)
 
     draw = ImageDraw.Draw(generated_image)
     W, H = generated_image.size
@@ -143,7 +162,7 @@ def edit_image(image_path, json_post_text):
         subtitle = " ".join(words) + "\n" + const[len(subtitle) + 1:]
         _, _, ws, hs = draw.textbbox((0, 0), subtitle, font=font)
 
-    draw.text((c, (H - ht - hs) - c - 2), title, font=font_b, fill="white")
+    draw.text((c, (H - ht - hs) - c), title, font=font_b, fill="white")
     draw.text((c, (H - hs) - c), subtitle, font=font, fill="white")
     generated_image.show()
 
@@ -159,16 +178,28 @@ def publish_to_instagram(photo_path, caption):
     cl.photo_upload(photo_path, caption)
 
 
+def log_to_db(json_post_text, img_path):
+    values = {"main_title": [json_post_text["main_title"]],
+              "subtitle": [json_post_text["subtitle"]],
+              "post_caption": [json_post_text["post_caption"]],
+              "hashtags": [json_post_text["hashtags"]],
+              "json": [json.dumps(json_post_text)],
+              "date": [current_time],
+              "edited_img_path": [img_path]}
+
+    df = pd.DataFrame.from_dict(values)
+    df.to_csv("logs.csv", mode='a', header=False, index=False)
+
+
 if __name__ == "__main__":
-    url = "https://openai.com/blog/new-models-and-developer-products-announced-at-devday?itm_source=tldrai"
+    url = "https://www.macrumors.com/2024/02/28/tim-cook-apple-generative-ai-break-new-ground/?utm_source=tldrai"
     # text = get_post_text(url)
     # json_post_text = generate_post_text(text)
     json_post_text = mock.json_post_text
     # generated_img_path = generate_image(json_post_text)
     generated_img_path = mock.img_path
-    edited_img_path = edit_image(generated_img_path, json_post_text)
-    # edited_img_path = mock.edited_img_path
-    # publish_to_instagram(edited_img_path, json_post_text["post_caption"] + "\n" + json_post_text["hashtags"])
-    # log_to_db(json_post_text, img_path)
-
+    # edited_img_path = edit_image(generated_img_path, json_post_text)
+    edited_img_path = mock.edited_img_path
+    publish_to_instagram(edited_img_path, json_post_text["post_caption"] + "\n" + json_post_text["hashtags"])
+    log_to_db(json_post_text, edited_img_path)
     print("Done!")
