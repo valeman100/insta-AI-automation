@@ -1,7 +1,10 @@
-json_post_text = {'main_title': "Apple's AI Revolution",
-                  'subtitle': 'Tim Cook announces groundbreaking AI advancements for 2024',
-                  'post_caption': "In a world where technology is constantly evolving, Apple has once again proven why it remains at the forefront of innovation. During its annual shareholders meeting, CEO Tim Cook unveiled plans to 'break new ground' in generative AI in 2024, promising to unlock transformative opportunities for users worldwide. This announcement comes on the heels of Cook's previous statements highlighting Apple's significant investments in AI, indicating a future where Apple's ecosystem could become even more integrated and intuitive. With rumors swirling about new AI features in iOS 18, it's clear that Apple is setting the stage for a major leap forward. Beyond the excitement of AI, the meeting also touched on corporate governance, with shareholders voting on executive compensation plans and welcoming new board members. As Apple continues to push the boundaries of what's possible, one thing is clear: the future of technology is bright, and it's being led by visionaries who are not afraid to reimagine the world.",
-                  'hashtags': '#AppleAI #TimCook #GenerativeAI #iOS18 #ShareholdersMeeting #Innovation #Technology #FutureTech #AIInvestment #AppleEcosystem #IntuitiveTech #CorporateGovernance #ExecutiveCompensation #BoardMembers #TechLeadership'}
+json_post_text = {'main_title': "AI's Dark Side Unveiled",
+                  'subtitle': 'Over 100 Malicious AI Models Found on Hugging Face',
+                  'post_caption': "🚨 The digital realm faces a new threat! Over 100 malicious AI/ML models have been discovered on the Hugging Face platform, marking a significant cybersecurity concern. These models, capable of executing code through pickle files, open backdoors to attackers, granting them full control over compromised machines. Imagine the potential for large-scale data breaches and corporate espionage, all happening under the radar. 🌐\n\n🔍 This silent infiltration doesn't just impact individual users; it threatens entire organizations globally. The rogue models, connecting to specific IP addresses, highlight the vulnerabilities within open-source repositories. It's a wake-up call for the cybersecurity community to reinforce defenses against such sophisticated attacks. 🛡️\n\n💡 From supply chain risks to zero-click worms, the cybersecurity landscape is evolving. Researchers are now uncovering new methods, like the BEAST attack, to exploit large-language models. The generative AI worm, Morris II, demonstrates the potential for AI models to spread malware and steal data across systems. This era of AI-driven threats demands innovative defense strategies. Let's stay vigilant and protect our digital frontiers. 🌍",
+                  'hashtags': '#Cybersecurity #AIMalware #HuggingFace #AIModels #MachineLearning #DataBreach #CorporateEspionage #SupplyChainRisk #ZeroClickWorm #BEASTAttack #GenerativeAI #MorrisII #AIWorm #DigitalDefense #CyberThreats'}
 
-img_path = "images/generated/2024-03-03-17-34.png"
-edited_img_path = "images/posts/2024-03-03-17-34.png"
+
+
+
+img_path = 'images/generated/2024-03-05-12-11.png'
+edited_img_path = 'images/posts/2024-03-05-12-11.png'

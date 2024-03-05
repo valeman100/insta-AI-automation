@@ -13,7 +13,10 @@ from PIL import Image, ImageFont, ImageDraw
 from copy import deepcopy
 from instagrapi import Client
 import mock
+import backoff
 import pandas as pd
+
+handled_errors = (openai.RateLimitError, openai.Timeout, openai.BadRequestError)
 
 load_dotenv('.env')
 openai.api_key = os.getenv('OPENAI_API_KEY')
@@ -42,17 +45,37 @@ def generate_image(json_post):
 
     image_prompt = completion.choices[0].message.content
 
-    response = client.images.generate(
-        model="dall-e-3",
-        prompt=image_prompt,
-        size="1024x1024",
-        quality="standard",  # hd
-        n=1,
-        response_format="url",
-        style="vivid"  # natural
-    )
+    def dall_e_3(image_prompt):
+        response = client.images.generate(
+            model="dall-e-3",
+            prompt=image_prompt,
+            size="1024x1024",
+            quality="standard",  # hd
+            n=1,
+            response_format="url",
+            style="vivid"  # natural
+        )
+        return response.data[0].url
 
-    image_url = response.data[0].url
+    while True:
+        try:
+            image_url = dall_e_3(image_prompt)
+            break
+        except Exception as e:
+            print(f"Error: {e}, try another prompt.")
+            completion = client.chat.completions.create(
+                model="gpt-4-turbo-preview",
+                temperature=0.0,
+                messages=[
+                    {"role": "system", "content": system_message},
+                    {"role": "user", "content": post_desc_prompt},
+                    {"role": "assistant", "content":
+                        f"Error: {e}, trying another prompt that could be compliant with this error."}
+                ]
+            )
+            image_prompt = completion.choices[0].message.content
+
+
     request = requests.get(image_url, stream=True)
     generated_image = Image.open(request.raw)
     generated_image.show()
@@ -67,12 +90,13 @@ def generate_post_text(text):
 $page'''
 
     system_message = '''I want you to respond only in English.
-Pretend to be an SMM, content writer, and Virtual Assistant for Instagram. 
+Pretend to be a social media manager, content writer, and Virtual Assistant for Instagram. 
 I will give you a post topic, your goal is to generate a post caption for an Instagram post regarding that topic. 
-Captions should contain at least a few paragraphs of text.
-Create an engaging Instagram post caption. The caption should contain at least 100-150 words about the topic 
-given below. The caption should not contain any hashtags. Do not put the caption into quotes.
-At the end of the post provide a list of 15 hashtags with # written in a single line separated with a space character. 
+Create an engaging Instagram post caption divided into paragraphs. 
+The caption should contain at least 100-150 words about the topic given below. 
+The caption should contain emojis preferably at the beginning of each paragraph.
+
+Provide a list of 15 hashtags with # written in a single line separated with a space character. 
 80% of hashtags should be long-tail and 20% should be high-volume hashtags. Do not include any @mentions.
 Do not write long DMs, be concise and to the point.
 
@@ -140,7 +164,7 @@ def get_post_text(url):
 def edit_image(image_path, json_post_text):
     generated_image = Image.open(image_path)
 
-    shadow = Image.open("images/const/shadow.png")
+    shadow = Image.open("images/const/shadow_new.png")
     generated_image.paste(shadow.convert('RGBA'), (0, 0), shadow)
     logo = Image.open("images/const/logo.png")
     generated_image.paste(logo.convert('RGBA'), (0, 0), logo)
@@ -184,7 +208,7 @@ def edit_image(image_path, json_post_text):
 
 
 def publish_to_instagram(photo_path, json_post_text):
-    caption = json_post_text["post_caption"] + "\n" + json_post_text["hashtags"]
+    caption = json_post_text["post_caption"] + "\n\n" + json_post_text["hashtags"]
 
     cl = Client()
     cl.login(os.getenv('INSTAGRAM_USERNAME'), os.getenv('INSTAGRAM_PASSWORD'))
@@ -211,16 +235,16 @@ def log_to_db(json_post_text, img_path, published):
 
 
 if __name__ == "__main__":
-    url = "https://mistral.ai/news/mistral-large/?utm_source=tldrai"
+    url = os.getenv('URL')
     text = get_post_text(url)
-    json_post_text = generate_post_text(text)
-    # json_post_text = mock.json_post_text
-    generated_img_path = generate_image(json_post_text)
-    # generated_img_path = mock.img_path
-    edited_img_path = edit_image(generated_img_path, json_post_text)
-    # edited_img_path = mock.edited_img_path
+    # json_post_text = generate_post_text(text)
+    json_post_text = mock.json_post_text
+    # generated_img_path = generate_image(json_post_text)
+    generated_img_path = mock.img_path
+    # edited_img_path = edit_image(generated_img_path, json_post_text)
+    edited_img_path = mock.edited_img_path
 
-    publish = input("Do you want to publish to Instagram? (y/n): ")
+    publish = input(f"Do you want to publish to Instagram? (y/n): \n\n {json_post_text['post_caption']}")
     published = False
     if publish == "y":
         published = publish_to_instagram(edited_img_path, json_post_text)
