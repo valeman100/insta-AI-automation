@@ -3,6 +3,7 @@ import re
 from pprint import pp
 from string import Template
 from bs4 import BeautifulSoup
+from requests_html import HTMLSession
 
 
 def generate_post_text(client, text):
@@ -55,3 +56,29 @@ def clean_string(html):
     text = re.sub(r'\t+', ' ', text)
     text = text.replace(u'\xa0', ' ')
     return text
+
+
+def get_post_text(url):
+    session = HTMLSession()
+    html = session.get(url)
+    text = clean_string(html.text)
+    text = text.strip()
+    return text
+
+    # from selenium import webdriver
+    #
+    # # Set up options for the Chrome WebDriver
+    # options = webdriver.ChromeOptions()
+    # options.add_argument('--headless')  # Optional: Run in headless mode without opening a browser window
+    #
+    # # Initialize the WebDriver
+    # driver = webdriver.Chrome(options=options)
+    #
+    # # Load the webpage
+    # driver.get(url)
+    #
+    # # Get the page source after JavaScript execution
+    # html = driver.page_source
+    #
+    # # Close the WebDriver
+    # driver.quit()
