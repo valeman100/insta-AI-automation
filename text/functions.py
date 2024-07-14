@@ -4,15 +4,17 @@ from pprint import pp
 from string import Template
 from bs4 import BeautifulSoup
 from requests_html import HTMLSession
+from selenium import webdriver
+from utilities.cost_calculation import calculate_cost
 
 
-def generate_post_text(client, text):
+def generate_post_text(client, text, model="gpt-4o"):
     post_desc_prompt = '''[POST TOPIC]:
 $page'''
 
     system_message = '''I want you to respond only in English.
-Pretend to be a social media manager, content writer, and Virtual Assistant for my instagram page which focuses on Artificial Inteligence news. 
-I will give you a post topic, your goal is to generate a post caption for an Instagram post regarding that topic. 
+Pretend to be a social media manager, content writer, and Virtual Assistant for my instagram page which focuses on Artificial Inteligence an thech news. 
+I will give you a post topic with a description, your goal is to generate a post caption for an Instagram post regarding that topic. 
 Create an engaging Instagram post caption divided into paragraphs. 
 The caption should contain at least 100-150 words about the topic given below. 
 The caption should contain emojis preferably at the beginning of each paragraph.
@@ -32,7 +34,7 @@ Answer with a JSON object with the following structure:
     post_desc_prompt = Template(post_desc_prompt).substitute(page=text)
 
     completion = client.chat.completions.create(
-        model="gpt-4-turbo-preview",
+        model=model,
         response_format={"type": "json_object"},
         temperature=0.0,
         messages=[
@@ -43,8 +45,9 @@ Answer with a JSON object with the following structure:
     json_text = json.loads(completion.choices[0].message.content)
     json_text["post_caption"] = json_text["post_caption"][:json_text["post_caption"].find("#")]
     pp(json_text)
+    cost = calculate_cost(completion)
 
-    return json_text
+    return json_text, cost
 
 
 def clean_string(html):
@@ -58,27 +61,32 @@ def clean_string(html):
     return text
 
 
-def get_post_text(url):
+def from_html_to_text(url):
     session = HTMLSession()
     html = session.get(url)
     text = clean_string(html.text)
     text = text.strip()
     return text
 
-    # from selenium import webdriver
-    #
-    # # Set up options for the Chrome WebDriver
-    # options = webdriver.ChromeOptions()
-    # options.add_argument('--headless')  # Optional: Run in headless mode without opening a browser window
-    #
-    # # Initialize the WebDriver
-    # driver = webdriver.Chrome(options=options)
-    #
-    # # Load the webpage
-    # driver.get(url)
-    #
-    # # Get the page source after JavaScript execution
-    # html = driver.page_source
-    #
-    # # Close the WebDriver
-    # driver.quit()
+
+def from_selenium_to_text(url):
+    options = webdriver.ChromeOptions()
+    options.add_argument('--headless')  # Optional: Run in headless mode without opening a browser window
+    driver = webdriver.Chrome(options=options)
+    driver.get(url)
+
+    html = driver.page_source
+    text = clean_string(html)
+    text = text.strip()
+
+    driver.quit()
+    if len(text) < 500:
+        raise ValueError("Text is too short")
+    return text
+
+
+def get_post_text(url):
+    text = from_html_to_text(url)
+    if len(text) < 500:
+        text = from_selenium_to_text(url)
+    return text

@@ -1,9 +1,7 @@
 import json
 
-from main import current_time
 
-
-def log_to_db(df, json_post_text, img_path, published, image_prompt):
+def log_to_db(df, json_post_text, img_path, published, image_prompt, current_time):
     # values = {"main_title": [json_post_text["main_title"]],
     #           "subtitle": [json_post_text["subtitle"]],
     #           "post_caption": [json_post_text["post_caption"]],
