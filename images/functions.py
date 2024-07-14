@@ -1,3 +1,4 @@
+import os
 from copy import deepcopy
 import requests
 from PIL import Image, ImageFont, ImageDraw
@@ -8,7 +9,7 @@ BASE_PATH = '/Users/vale/Developer/pycharm/insta-AI-automation/'
 
 
 def generate_image(client, json_post, previous_prompts, current_time, model="gpt-4o"):
-    image_url = None
+    img_path = None
     cost = 0
     post_desc_prompt = f'''Previous Text-to-Image prompts:
 1. {previous_prompts.iloc[0]}
@@ -48,14 +49,15 @@ Make your prompt different from the previous ones such that the images generated
 
     for i in range(2):
         try:
-            image_url, cost_t = dall_e_3(client, image_prompt)
+            # img_path, cost_t = stable_diffusion(image_prompt, current_time)
+            img_path, cost_t = dall_e_3(client, image_prompt, current_time)
             cost += cost_t
             print(f"Cost to generate image: {cost}")
             break
         except Exception as e:
             print(f"Error: {e}, try another prompt.")
             completion = client.chat.completions.create(
-                model="gpt-4-turbo-preview",
+                model=model,
                 temperature=0.0,
                 messages=[
                     {"role": "system", "content": system_message},
@@ -67,16 +69,53 @@ Make your prompt different from the previous ones such that the images generated
             image_prompt = completion.choices[0].message.content
             cost += calculate_cost(completion)
 
-    if not image_url:
+    if not img_path:
         raise Exception("Could not generate image")
 
-    request = requests.get(image_url, stream=True)
+    return img_path, image_prompt, cost
+
+
+def dall_e_3(client, image_prompt, current_time):
+    response = client.images.generate(
+        model="dall-e-3",
+        prompt=image_prompt,
+        size="1024x1024",
+        quality="standard",  # hd
+        n=1,
+        response_format="url",
+        style="vivid"  # natural
+    )
+
+    request = requests.get(response.data[0].url, stream=True)
     generated_image = Image.open(request.raw)
     # generated_image.show()
     img_path = BASE_PATH + f"images/generated/{current_time}.png"
     generated_image.save(img_path)
 
-    return img_path, image_prompt, cost
+    return img_path, 0.04
+
+
+def stable_diffusion(image_prompt, current_time):
+    response = requests.post(
+        # f"https://api.stability.ai/v2beta/stable-image/generate/ultra",
+        # f"https://api.stability.ai/v2beta/stable-image/generate/core",
+        f"https://api.stability.ai/v2beta/stable-image/generate/sd3",
+
+        headers={
+            "authorization": f"Bearer " + os.getenv('STABLE_DIFFUSION_KEY'),
+            "accept": "image/*"
+        },
+        files={"none": ''},
+        data={
+            "prompt": image_prompt,
+            "output_format": "png",
+        },
+    )
+    img_path = BASE_PATH + f"images/generated/{current_time}.png"
+    with open(img_path, "wb") as f:
+        f.write(response.content)
+
+    return img_path, 0.08
 
 
 def edit_image(image_path, json_post_text):
@@ -123,17 +162,3 @@ def edit_image(image_path, json_post_text):
     generated_image.save(final_path)
 
     return final_path
-
-
-def dall_e_3(client, image_prompt):
-    response = client.images.generate(
-        model="dall-e-3",
-        prompt=image_prompt,
-        size="1024x1024",
-        quality="standard",  # hd
-        n=1,
-        response_format="url",
-        style="vivid"  # natural
-    )
-
-    return response.data[0].url, 0.040
