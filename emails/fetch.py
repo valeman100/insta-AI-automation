@@ -16,7 +16,6 @@ def get_last_email_from(sender_email):
         raw_message = server.fetch([email_id], ['BODY[]', 'FLAGS'])
         from_ = pyzmail.PyzMessage.factory(raw_message[email_id][b'BODY[]']).get_address('from')
         if from_[1] == sender_email:
-            # if from_[1] == 'vale.mannucci@live.it':
             message = pyzmail.PyzMessage.factory(raw_message[email_id][b'BODY[]'])
             break
 
@@ -27,14 +26,12 @@ def get_last_email_from(sender_email):
 
 def get_urls_from_html(html):
     parsed_html = BeautifulSoup(html, features="html.parser")
-    email = parsed_html.contents[0]
+    email = parsed_html.contents[1]
     dom = etree.HTML(str(email))
 
-    res = dom.xpath(
-        '//a[@style="box-sizing: border-box; font-family: Arial, Helvetica, sans-serif; font-size: 18px; color: inherit !important; text-decoration: underline !important;"]')
-
+    res = dom.xpath('//td[@class="container"]//table[@style="table-layout: fixed; width: 100%;"]//a')
     urls = []
-    for element in res[3:]:
+    for element in res:
         urls.append(element.get('href'))
 
     return urls

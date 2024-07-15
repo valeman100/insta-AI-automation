@@ -23,20 +23,20 @@ client = OpenAI()
 cost = 0
 
 df = pd.read_csv(BASE_PATH + "logs.csv", index_col=0)
-body = get_last_email_from('vale.mannucci@live.it')
-# body = get_last_email_from('dan@tldrnewsletter.com')
+body = get_last_email_from('dan@tldrnewsletter.com')
 urls = get_urls_from_html(body)
-text = get_post_text(urls[9])
-# json_post_text, cost_t = generate_post_text(client, text, model)
-# cost += cost_t
-json_post_text = mock.json_post_text
-generated_img_path, image_prompt, cost_t = generate_image(client, json_post_text, df[-2:]["image_prompt"], current_time, model)
-cost += cost_t
-# image_prompt = mock.image_prompt
-# generated_img_path = mock.img_path
-edited_img_path = edit_image(generated_img_path, json_post_text)
-# edited_img_path = mock.edited_img_path
-published = publish_to_instagram(edited_img_path, json_post_text)
-log_to_db(df, json_post_text, edited_img_path, published, image_prompt, current_time)
+for i in range(1):
+    text = get_post_text(urls[i])
+    json_post_text, cost_t = generate_post_text(client, text, model)
+    cost += cost_t
+    # json_post_text = mock.json_post_text
+    generated_img_path, image_prompt, cost_t = generate_image(client, json_post_text, df[-2:]["image_prompt"], current_time, model)
+    cost += cost_t
+    # image_prompt = mock.image_prompt
+    # generated_img_path = mock.img_path
+    edited_img_path = edit_image(generated_img_path, json_post_text)
+    # edited_img_path = mock.edited_img_path
+    published = publish_to_instagram(edited_img_path, json_post_text)
+    log_to_db(df, json_post_text, edited_img_path, published, image_prompt, current_time)
 
-print(f"Executed successfully run at {current_time} with a total cost of $ {cost}.")
+    print(f"Executed successfully run at {current_time} with a total cost of $ {round(cost, 3)}")
