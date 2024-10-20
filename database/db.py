@@ -1,5 +1,7 @@
 import json
 
+BASE_PATH = '/Users/vale/Developer/pycharm/insta-AI-automation/'
+
 
 def log_to_db(df, json_post_text, img_path, published, image_prompt, current_time):
     # values = {"main_title": [json_post_text["main_title"]],
@@ -17,4 +19,5 @@ def log_to_db(df, json_post_text, img_path, published, image_prompt, current_tim
                        json_post_text["hashtags"], json.dumps(json_post_text), current_time,
                        img_path, published, image_prompt]
     # df = df.drop_duplicates(subset=["post_caption"])
-    df.to_csv("logs.csv")
+
+    df.to_csv(BASE_PATH + "logs.csv")

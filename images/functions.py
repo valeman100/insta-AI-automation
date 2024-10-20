@@ -11,32 +11,43 @@ BASE_PATH = '/Users/vale/Developer/pycharm/insta-AI-automation/'
 def generate_image(client, json_post, previous_prompts, current_time, model="gpt-4o"):
     img_path = None
     cost = 0
+    post_caption = json_post["post_caption"].split('\n')[0]
     post_desc_prompt = f'''Previous Text-to-Image prompts:
 1. {previous_prompts.iloc[0]}
 
 2. {previous_prompts.iloc[1]}
 
 Description:
-{json_post["post_caption"]}
+{post_caption}
 
 Prompt for Text-to-Image Model: '''
 
-    system_message = f'''Your task is to generate a text prompt for an artificial intelligence model that generates images.
-I will give you a description and your goal is to suggest an image prompt to ingest into an artificial intelligence text-to-image model.
-The model will generate an image based on the text prompt you suggest.
-The prompt must be:
-- captivating, engaging and interesting. 
-- compliant with the post description. 
-- with specific details about colours and objects that the image will contain. 
-- must contain elements present in the description.
-- do not put people or writing in the image.
+    system_message = f'''Your task is to generate a detailed text prompt for an artificial intelligence model that generates images. I will provide you with a description, and your goal is to suggest an image prompt that the AI can use to create a visually captivating and scenographic image. 
 
-I will also provide you with 2 previous prompts.
-Make your prompt different from the previous ones such that the images generated are visually very different from the previous ones.'''
+Guidelines: 
+Captivating and Engaging: The prompt must be captivating, engaging, and visually appealing, ensuring the image grabs attention at first glance. 
+Convey the Description: The image should clearly convey the essence of the description. It should be immediately understandable without needing to read the description. 
+Specific Focus: Underline a specific detail that you want to be the focus of the image, such as a unique object, a distinct feature, or an unusual name. This will ensure the image highlights the essential aspect of the article. 
+Detailed and Specific: Provide detailed and specific descriptions of the colors, objects, and scenery that the image should contain. Be vivid and imaginative to enhance the visual appeal. 
+No People or Text: Do not include people or text in the image. The scene should be depicted solely through objects, settings, and colors. I will also provide you with 2 previous prompts. 
+
+example 1:
+Description: 
+Exciting news from OpenAI! Today marks the launch of GPT-4o Mini, a lighter and more affordable AI model designed to make advanced AI accessible to everyone. This new model is not only cost-effective but also more capable than GPT-3.5, making it a game-changer for developers on a budget. 
+
+Prompt for Text-to-Image Model:
+Realize an image of a cannon that launches a ball representing the new AI model GPT-4o Mini. It is cleverer so depict it with the typical Einstein hairs, musculus because it is more capable and affordable so there is money here and there. The cannon is in a futuristic setting with a lot of lights and a crowd of people in the background. The ball is in the air, and the cannon is about to launch it. The scene is colorful and vibrant, with a sense of excitement and innovation in the air.
+
+example 2:
+Description: 
+Exciting News! Today, we unveil Mistral NeMo, our latest 12B model crafted in collaboration with NVIDIA. With a massive context window of up to 128k tokens, Mistral NeMo sets a new standard in reasoning, world knowledge, and coding accuracy for its size. It's designed to be a seamless drop-in replacement for any system using Mistral 7B.
+
+Prompt for Text-to-Image Model:
+Create an image of a majestic mountain peak, symbolizing the Mistral NeMo's towering achievement in AI. The mountain is made of vibrant digital data streams with a shimmering, futuristic blue hue. At the summit, a large, brilliantly glowing crystal represents the 12B model. Surround the crystal with an ethereal mist, reflecting its name "Mistral." Highlight an expansive cosmic canvas with swirling galaxies and intricate constellations to symbolize the model’s comprehensive world knowledge and reasoning abilities. Additionally, depict circuit-like patterns winding up the mountain, emulating the model's superior coding accuracy. Background hues should transition from deep space purples to dawn-like gold and crimson, showcasing the dawn of a new era in AI.'''
 
     completion = client.chat.completions.create(
         model=model,
-        temperature=0.0,
+        temperature=1,
         messages=[
             {"role": "system", "content": system_message},
             {"role": "user", "content": post_desc_prompt}

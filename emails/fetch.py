@@ -11,14 +11,16 @@ def get_last_email_from(sender_email):
     server.select_folder('INBOX')
     messages = server.search(['ALL'])
 
+    i = 1
     message = None
     for email_id in messages[::-1]:
         raw_message = server.fetch([email_id], ['BODY[]', 'FLAGS'])
         from_ = pyzmail.PyzMessage.factory(raw_message[email_id][b'BODY[]']).get_address('from')
         if from_[1] == sender_email:
             message = pyzmail.PyzMessage.factory(raw_message[email_id][b'BODY[]'])
-            break
-
+            if i == 1:
+                break
+            i += 1
     body = message.html_part.get_payload().decode(message.html_part.charset)
     server.logout()
     return body

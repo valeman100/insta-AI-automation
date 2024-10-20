@@ -90,3 +90,39 @@ def get_post_text(url):
     if len(text) < 500:
         text = from_selenium_to_text(url)
     return text
+
+
+def check_post_text(client, post, previous_posts, model="gpt-4o"):
+    user_message = '''Title one: $previous_post_1
+Title two: $previous_post_2
+
+post description: $post'''
+
+    system_message = ''' I'll give you two post titles.
+Your task is to check if one of the following titles would be compliant with the description below.
+
+Answer with a JSON object with the following structure:
+{"compliant": a string with yes if one of the titles is compliant or no otherwise}'''
+
+    post_1 = previous_posts["main_title"].iloc[0] + " - " + previous_posts["subtitle"].iloc[0]
+    post_2 = previous_posts["main_title"].iloc[1] + " - " + previous_posts["subtitle"].iloc[1]
+
+    user_message = Template(user_message).substitute(
+        post=post,
+        previous_post_1=post_1,
+        previous_post_2=post_2
+    )
+
+    completion = client.chat.completions.create(
+        model=model,
+        response_format={"type": "json_object"},
+        temperature=0.0,
+        messages=[
+            {"role": "system", "content": system_message},
+            {"role": "user", "content": user_message}
+        ]
+    )
+    json_text = json.loads(completion.choices[0].message.content)
+    cost = calculate_cost(completion)
+
+    return json_text, cost

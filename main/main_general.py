@@ -1,4 +1,8 @@
 import os
+import sys
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+
 import time
 import openai
 from openai import OpenAI
@@ -11,7 +15,6 @@ from emails.fetch import get_last_email_from, get_urls_from_html
 from images.functions import generate_image, edit_image
 from instagram.functions import publish_to_instagram
 from text.functions import generate_post_text, get_post_text
-
 
 BASE_PATH = '/Users/vale/Developer/pycharm/insta-AI-automation/'
 model = "gpt-4o"
@@ -30,7 +33,8 @@ for i in range(1):
     json_post_text, cost_t = generate_post_text(client, text, model)
     cost += cost_t
     # json_post_text = mock.json_post_text
-    generated_img_path, image_prompt, cost_t = generate_image(client, json_post_text, df[-2:]["image_prompt"], current_time, model)
+    generated_img_path, image_prompt, cost_t = generate_image(client, json_post_text, df[-2:]["image_prompt"],
+                                                              current_time, model)
     cost += cost_t
     # image_prompt = mock.image_prompt
     # generated_img_path = mock.img_path

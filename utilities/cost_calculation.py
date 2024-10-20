@@ -1,5 +1,7 @@
 prices = {
     'gpt-4o-2024-05-13': {'prompt_cost': 5/1e6, 'completion_cost': 15/1e6},
+    'gpt-4o': {'prompt_cost': 2.5/1e6, 'completion_cost': 10/1e6},
+    'gpt-4o-2024-08-06': {'prompt_cost': 2.5/1e6, 'completion_cost': 10/1e6},
     'gpt-3.5-turbo': {'prompt_cost': 0.5/1e6, 'completion_cost': 1.5/1e6},
     'gpt-3.5-turbo-0125': {'prompt_cost': 0.5/1e6, 'completion_cost': 1.5/1e6},
     'gpt-4-turbo': {'prompt_cost': 10/1e6, 'completion_cost': 30/1e6}}
