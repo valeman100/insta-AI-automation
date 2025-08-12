@@ -2,10 +2,11 @@ import os
 from copy import deepcopy
 import requests
 from PIL import Image, ImageFont, ImageDraw
+from pathlib import Path
 
 from utilities.cost_calculation import calculate_cost
 
-BASE_PATH = '/Users/vale/Developer/pycharm/insta-AI-automation/'
+BASE_PATH = str(Path(__file__).resolve().parents[1]) + "/"
 
 
 def generate_image(client, json_post, previous_prompts, current_time, model="gpt-4o"):

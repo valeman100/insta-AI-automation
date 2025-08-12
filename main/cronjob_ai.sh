@@ -1,5 +1,13 @@
 #!/bin/bash
-set -e
-. Developer/pycharm/venv/insta-AI-automation/bin/activate
-/Users/vale/Developer/pycharm/venv/insta-AI-automation/bin/python3 /Users/vale/Developer/pycharm/insta-AI-automation/main/main_ai.py
-deactivate
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="${SCRIPT_DIR}/.."
+
+if [ -f "${REPO_ROOT}/.venv/bin/activate" ]; then
+  source "${REPO_ROOT}/.venv/bin/activate"
+  python "${REPO_ROOT}/main/main_ai.py"
+  deactivate || true
+else
+  python3 "${REPO_ROOT}/main/main_ai.py"
+fi

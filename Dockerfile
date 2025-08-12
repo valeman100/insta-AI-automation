@@ -1,9 +1,13 @@
-FROM python:3.11.4
+FROM python:3.11.4-slim
 
-COPY requirements.txt .
-RUN pip install -r requirements.txt
+WORKDIR /app
 
-COPY . .
+COPY requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-ENTRYPOINT ["python3"]
-CMD ["main.py"]
+COPY . /app
+
+ENV PYTHONUNBUFFERED=1
+
+# Default command can be overridden at runtime
+CMD ["python", "main/main_ai.py"]

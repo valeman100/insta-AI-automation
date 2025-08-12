@@ -1,5 +1,6 @@
 import os
 import sys
+from pathlib import Path
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
@@ -16,7 +17,7 @@ from images.functions import generate_image, edit_image
 from instagram.functions import publish_to_instagram
 from text.functions import generate_post_text, get_post_text, check_post_text
 
-BASE_PATH = '/Users/vale/Developer/pycharm/insta-AI-automation/'
+BASE_PATH = str(Path(__file__).resolve().parents[1]) + "/"
 model = "gpt-4o"
 
 load_dotenv(BASE_PATH + '.env')
@@ -29,7 +30,7 @@ df = pd.read_csv(BASE_PATH + "logs.csv", index_col=0)
 body = get_last_email_from('dan@tldrnewsletter.com')
 urls = get_urls_from_html(body)
 
-text = get_post_text(urls[1])
+text = get_post_text(urls[0])
 check, cost_t = check_post_text(client, text, df[-2:])
 cost += cost_t
 if check["compliant"] == "yes":

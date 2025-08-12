@@ -1,6 +1,7 @@
 import json
+from pathlib import Path
 
-BASE_PATH = '/Users/vale/Developer/pycharm/insta-AI-automation/'
+BASE_PATH = str(Path(__file__).resolve().parents[1]) + "/"
 
 
 def log_to_db(df, json_post_text, img_path, published, image_prompt, current_time):
